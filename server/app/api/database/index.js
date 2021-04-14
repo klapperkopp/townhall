@@ -1,24 +1,32 @@
 const CustomError = require("@app/entities/error");
 const { Pool } = require("pg");
 
-class DatabaseAPI{
+class DatabaseAPI {
   static pool = null;
 
-  static async initialize(){
-    if(DatabaseAPI.pool) throw new CustomError("database/intialized", "You can only initialized once");
-    DatabaseAPI.pool = new Pool({ connectionString: process.env.DATABASE_URL});
+  static async initialize() {
+    if (DatabaseAPI.pool)
+      throw new CustomError(
+        "database/intialized",
+        "You can only initialized once"
+      );
+    DatabaseAPI.pool = new Pool({ connectionString: process.env.DATABASE_URL });
   }
 
-  static async query(func){
-    const client = await DatabaseAPI.pool.connect({ssl: true});
-    try{
+  static async query(func) {
+    const client = await DatabaseAPI.pool.connect({
+      ssl: { rejectUnauthorized: false },
+    });
+    try {
       return await func(client);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      client.release();
     }
-    catch(e){console.log(e)}
-    finally{ client.release() }
   }
 
-  static async migrate(){
+  static async migrate() {
     await DatabaseAPI.query(async (client) => {
       await client.query(`
         CREATE TABLE IF NOT EXISTS rooms(
@@ -29,10 +37,13 @@ class DatabaseAPI{
     });
   }
 
-  static get client(){
-    if(!DatabaseAPI.pool) throw new CustomError("database/not-initliazed", "You need to initialize first");
+  static get client() {
+    if (!DatabaseAPI.pool)
+      throw new CustomError(
+        "database/not-initliazed",
+        "You need to initialize first"
+      );
     else return DatabaseAPI.pool;
   }
-
 }
 module.exports = DatabaseAPI;
