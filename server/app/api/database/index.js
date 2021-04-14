@@ -10,7 +10,7 @@ class DatabaseAPI{
   }
 
   static async query(func){
-    const client = await DatabaseAPI.pool.connect();
+    const client = await DatabaseAPI.pool.connect({ssl: true});
     try{
       return await func(client);
     }finally{ client.release() }
