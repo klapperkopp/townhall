@@ -13,7 +13,9 @@ class DatabaseAPI{
     const client = await DatabaseAPI.pool.connect({ssl: true});
     try{
       return await func(client);
-    }finally{ client.release() }
+    }
+    catch(e){console.log(e)}
+    finally{ client.release() }
   }
 
   static async migrate(){
